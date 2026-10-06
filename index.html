@@ -19,19 +19,19 @@
   --r:10px;
 }
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
-  --bg:#10161F; --surface:#18212D; --sunk:#141C26; --line:#2A3646; --fg:#E6ECF3; --muted:#9AA8B8;
-  --accent:#8DB4E2; --accent-fg:#0E1622; --accent-soft:#1F2D40;
+  --bg:#10161F; --surface:#18212D; --sunk:#141C26; --line:#2A3646; --fg:#D9E0EA; --muted:#98A6B6;
+  --accent:#7BA3D4; --accent-fg:#0E1622; --accent-soft:#1F2D40;
   --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --err:#F1A1A5; --err-bg:#3D1D20;
   color-scheme:dark}}
 :root[data-theme="dark"]{
-  --bg:#10161F; --surface:#18212D; --sunk:#141C26; --line:#2A3646; --fg:#E6ECF3; --muted:#9AA8B8;
-  --accent:#8DB4E2; --accent-fg:#0E1622; --accent-soft:#1F2D40;
+  --bg:#10161F; --surface:#18212D; --sunk:#141C26; --line:#2A3646; --fg:#D9E0EA; --muted:#98A6B6;
+  --accent:#7BA3D4; --accent-fg:#0E1622; --accent-soft:#1F2D40;
   --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --err:#F1A1A5; --err-bg:#3D1D20;
   color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.65}
-.wrap{max-width:1080px;margin:0 auto;padding-block:28px calc(64px + env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));display:grid;gap:22px}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.7}
+.wrap{max-width:1160px;margin:0 auto;padding-block:28px calc(64px + env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));display:grid;gap:22px}
 h1,h2{font-family:var(--f-display);font-weight:600;text-wrap:balance;margin:0}
 h1{font-size:1.75rem;line-height:1.3}
 h2{font-size:1.1rem}
@@ -63,7 +63,7 @@ button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(
 .checks b{font-family:var(--f-display);font-weight:500}
 .checks span{color:var(--muted);font-size:.9rem}
 .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem;color:var(--muted)}
-.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-inline-end:6px;border:1px solid var(--line)}
+.sw{display:inline-block;width:18px;height:18px;border-radius:4px;vertical-align:-4px;margin-inline-end:8px;border:1px solid var(--muted)}
 .stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
 @media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
 .stat{border-radius:8px;padding:10px 12px;background:var(--sunk);display:grid;gap:2px;min-width:0}
@@ -71,14 +71,25 @@ button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(
 .stat .l{font-size:.82rem;color:var(--muted)}
 .stat.fixed{background:var(--fix-bg)} .stat.check{background:var(--chk-bg)} .stat.new{background:var(--new-bg)} .stat.ok{background:var(--ok-bg)}
 .filters{display:flex;flex-wrap:wrap;gap:8px}
-.filters button{padding:5px 12px;font-size:.88rem;border-radius:999px}
+.filters button{padding:6px 14px;font-size:.9rem;border-radius:999px}
+.filters .cnt{font-variant-numeric:tabular-nums;opacity:.7;margin-inline-start:4px}
 .filters button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
 .tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
-table{border-collapse:collapse;width:100%;min-width:860px;font-size:.88rem}
-th,td{text-align:right;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:.9rem}
+th,td{text-align:right;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
+/* a coloured edge per row/card, so the rows that need attention stand out when scanning */
+tbody tr{border-inline-start:3px solid transparent}
+tr.s-fixed{border-inline-start-color:var(--fix)} tr.s-check{border-inline-start-color:var(--chk)} tr.s-new{border-inline-start-color:var(--new)}
+@media (min-width:641px){
+  tbody tr:hover{background:var(--sunk)}
+  td .mono{white-space:nowrap}
+  td wbr{display:none}
+  td.c-who{min-width:160px}
+  td.note{min-width:160px}
+}
 th{background:var(--sunk);font-weight:600;position:sticky;top:0}
 tr:last-child td{border-bottom:none}
-.pill{display:inline-block;padding:1px 10px;border-radius:999px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.pill{display:inline-block;padding:2px 12px;border-radius:999px;font-size:.8rem;font-weight:600;white-space:nowrap}
 .pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.fixed{background:var(--fix-bg);color:var(--fix)}
 .pill.check{background:var(--chk-bg);color:var(--chk)} .pill.new{background:var(--new-bg);color:var(--new)}
 .mono{font-family:var(--f-mono);font-size:.82rem;direction:ltr;unicode-bidi:isolate;overflow-wrap:anywhere}
@@ -104,7 +115,7 @@ tr:last-child td{border-bottom:none}
   table,tbody{display:block}
   thead{display:none}
   tbody{display:grid;gap:10px}
-  tr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 12px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:14px;background:var(--surface)}
+  tr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 12px;align-items:start;border:1px solid var(--line);border-inline-start-width:3px;border-radius:8px;padding:14px;background:var(--surface)}
   td{display:block;padding:0;border:none;min-width:0;overflow-wrap:anywhere}
   td.c-st{padding-top:2px}
   td.c-who{font-weight:600}
@@ -179,6 +190,7 @@ tr:last-child td{border-bottom:none}
     <p class="small" id="extra-line"></p>
     <div class="filters" role="group" aria-label="عرض">
       <button data-f="all" aria-pressed="true">الكل</button>
+      <button data-f="attn" aria-pressed="false">غير السليم</button>
       <button data-f="fixed" aria-pressed="false">اتصلح</button>
       <button data-f="new" aria-pressed="false">جديد</button>
       <button data-f="check" aria-pressed="false">للتأكيد</button>
@@ -644,7 +656,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
       const dw = new ExcelJS.Workbook(); await dw.xlsx.load(bufs.data.slice(0));
       const now = new Date(); const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
       const out = runCheck(ExcelJS, fw, dw, DEFAULT_COURSES, today);
-      out.dataWb = dw; last = out; render(); $('intro').hidden = true; $('results').hidden = false;
+      out.dataWb = dw; last = out; filter = out.stats.students > out.stats.ok ? 'attn' : 'all'; render(); $('intro').hidden = true; $('results').hidden = false;
       $('status').textContent = `اتراجع ${out.stats.students} طالب (${out.submissions} تسجيل في الفورم).`;
       $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     } catch (e) {
@@ -660,7 +672,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
     $('extra-line').textContent = s.extra ? `فيه ${s.extra} طالب في الملف مش موجودين في الفورم ده — ما اتغيروش، وهتلاقيهم في التقرير.` : '';
     const order = { check: 0, fixed: 1, new: 2, ok: 3 };
     const rows = [...last.results].sort((a, b) => order[a.status] - order[b.status] || (a.row || 0) - (b.row || 0))
-      .filter(x => filter === 'all' || x.status === filter);
+      .filter(x => filter === 'all' || (filter === 'attn' ? x.status !== 'ok' : x.status === filter));
     const fc = c => c.replace(/^HUME(\d)/, 'HUM E$1');
     const mail = v => esc(v).replace('@', '@<wbr>'); // long emails break after the @ first
     $('rows').innerHTML = rows.map(x => {
@@ -674,14 +686,17 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
         co = c.status === 'fixed' ? c.changes.map(t => `<div class="chg">${t.from ? `<span class="mono was">${esc(t.from)}</span>` : '<span class="sub">اتضافت</span>'} ${t.to ? `<span class="mono">${esc(t.to)}</span>` : '<span class="sub">اتشالت</span>'}</div>`).join('')
           : c.status === 'check' ? `<div class="chk-txt">${esc(c.why)}</div>` : '<span class="sub">مطابقة</span>';
       }
-      return `<tr><td class="c-st"><span class="pill ${x.status}">${STATUS_AR[x.status]}</span></td>
+      return `<tr class="s-${x.status}"><td class="c-st"><span class="pill ${x.status}">${STATUS_AR[x.status]}</span></td>
         <td class="c-who">${esc(x.s.name)}<div class="sub">${x.row ? 'صف ' + x.row : ''}${x.s.level ? ' · ' + esc(x.s.level) : ''}</div></td>
         <td data-label="الإيميل">${em}</td><td data-label="المواد">${co}</td><td class="note" data-label="ملاحظات">${x.notes.map(esc).join('<br>')}</td></tr>`;
     }).join('') || `<tr><td colspan="5" class="sub">مفيش طلاب في الفلتر ده.</td></tr>`;
+    document.querySelectorAll('.filters button').forEach(b => {
+      const f = b.dataset.f, n = f === 'all' ? s.students : f === 'attn' ? s.students - s.ok : f === 'new' ? s.added : s[f];
+      b.setAttribute('aria-pressed', f === filter);
+      b.innerHTML = `${esc(b.dataset.l || (b.dataset.l = b.textContent))} <span class="cnt">${n}</span>`;
+    });
   }
-  document.querySelectorAll('.filters button').forEach(b => b.onclick = () => {
-    filter = b.dataset.f; document.querySelectorAll('.filters button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
-  });
+  document.querySelectorAll('.filters button').forEach(b => b.onclick = () => { filter = b.dataset.f; render(); });
 
   // downloads
   const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
