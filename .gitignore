@@ -1,0 +1,12 @@
+# Student data must never be committed (public repo)
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+~$*
+.DS_Store
+
+# Local leftovers (zip extract, tooling)
+registration-check/
+*.zip
+screenshots/

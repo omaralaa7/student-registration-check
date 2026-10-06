@@ -1,0 +1,707 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>مراجعة تسجيلات الطلاب</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600&family=Readex+Pro:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: one working column — files in, summary, then the student-by-student table. */
+:root{
+  --bg:#F5F7FA; --surface:#FFFFFF; --sunk:#EDF1F6; --line:#D9E0EA; --fg:#18222F; --muted:#5B6878;
+  --accent:#1F3A5F; --accent-fg:#FFFFFF; --accent-soft:#E3EAF3;
+  --ok:#1E7A46; --ok-bg:#E3F3E9; --fix:#1E7A46; --fix-bg:#C6EFCE; --chk:#9A4A0B; --chk-bg:#FCE4D6; --new:#1D5A99; --new-bg:#DDEBF7; --err:#A4262C; --err-bg:#FBE9EA;
+  --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
+  --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
+  --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10161F; --surface:#18212D; --sunk:#141C26; --line:#2A3646; --fg:#E6ECF3; --muted:#9AA8B8;
+  --accent:#8DB4E2; --accent-fg:#0E1622; --accent-soft:#1F2D40;
+  --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --err:#F1A1A5; --err-bg:#3D1D20;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10161F; --surface:#18212D; --sunk:#141C26; --line:#2A3646; --fg:#E6ECF3; --muted:#9AA8B8;
+  --accent:#8DB4E2; --accent-fg:#0E1622; --accent-soft:#1F2D40;
+  --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --err:#F1A1A5; --err-bg:#3D1D20;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{margin:0;background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.65}
+.wrap{max-width:1080px;margin:0 auto;padding-block:28px calc(64px + env(safe-area-inset-bottom));padding-left:max(16px,env(safe-area-inset-left));padding-right:max(16px,env(safe-area-inset-right));display:grid;gap:22px}
+h1,h2{font-family:var(--f-display);font-weight:600;text-wrap:balance;margin:0}
+h1{font-size:1.75rem;line-height:1.3}
+h2{font-size:1.1rem}
+p{margin:0}
+.lead{color:var(--muted);max-width:68ch}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:20px;display:grid;gap:16px;min-width:0}
+.files{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:680px){.files{grid-template-columns:1fr}}
+.drop{position:relative;border:1.5px dashed var(--line);border-radius:var(--r);background:var(--sunk);padding:18px;display:grid;gap:6px;cursor:pointer;transition:border-color .15s,background .15s;min-width:0}
+.drop:hover,.drop.over{border-color:var(--accent);background:var(--accent-soft)}
+.drop:focus-within{outline:2px solid var(--accent);outline-offset:2px}
+.drop input{position:absolute;inset:0;opacity:0;cursor:pointer;width:100%;height:100%}
+.drop .step{font-size:.78rem;color:var(--muted);letter-spacing:.02em}
+.drop .what{font-family:var(--f-display);font-weight:500;font-size:1.02rem}
+.drop .hint{font-size:.85rem;color:var(--muted)}
+.drop .chosen{font-family:var(--f-mono);font-size:.82rem;color:var(--ok);overflow-wrap:anywhere;direction:ltr;text-align:right}
+.drop.ready{border-style:solid;border-color:var(--ok);background:var(--ok-bg)}
+.actions{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+button{font:inherit;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--fg);padding:9px 16px;cursor:pointer}
+button:hover:not(:disabled){border-color:var(--accent)}
+button:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+button:disabled{opacity:.45;cursor:not-allowed}
+button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(--accent);font-weight:600}
+.status-line{font-size:.9rem;color:var(--muted)}
+.error{background:var(--err-bg);color:var(--err);border-radius:8px;padding:12px 14px}
+.checks{display:grid;grid-template-columns:repeat(3,1fr);gap:14px}
+@media (max-width:760px){.checks{grid-template-columns:1fr}}
+.checks div{display:grid;gap:4px;min-width:0}
+.checks b{font-family:var(--f-display);font-weight:500}
+.checks span{color:var(--muted);font-size:.9rem}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem;color:var(--muted)}
+.sw{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-inline-end:6px;border:1px solid var(--line)}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stat{border-radius:8px;padding:10px 12px;background:var(--sunk);display:grid;gap:2px;min-width:0}
+.stat .n{font-family:var(--f-display);font-size:1.5rem;font-variant-numeric:tabular-nums;line-height:1.2}
+.stat .l{font-size:.82rem;color:var(--muted)}
+.stat.fixed{background:var(--fix-bg)} .stat.check{background:var(--chk-bg)} .stat.new{background:var(--new-bg)} .stat.ok{background:var(--ok-bg)}
+.filters{display:flex;flex-wrap:wrap;gap:8px}
+.filters button{padding:5px 12px;font-size:.88rem;border-radius:999px}
+.filters button[aria-pressed="true"]{background:var(--accent);color:var(--accent-fg);border-color:var(--accent)}
+.tbl{overflow-x:auto;border:1px solid var(--line);border-radius:8px}
+table{border-collapse:collapse;width:100%;min-width:860px;font-size:.88rem}
+th,td{text-align:right;vertical-align:top;padding:9px 10px;border-bottom:1px solid var(--line)}
+th{background:var(--sunk);font-weight:600;position:sticky;top:0}
+tr:last-child td{border-bottom:none}
+.pill{display:inline-block;padding:1px 10px;border-radius:999px;font-size:.8rem;font-weight:600;white-space:nowrap}
+.pill.ok{background:var(--ok-bg);color:var(--ok)} .pill.fixed{background:var(--fix-bg);color:var(--fix)}
+.pill.check{background:var(--chk-bg);color:var(--chk)} .pill.new{background:var(--new-bg);color:var(--new)}
+.mono{font-family:var(--f-mono);font-size:.82rem;direction:ltr;unicode-bidi:isolate;overflow-wrap:anywhere}
+.chg{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
+.was{text-decoration:line-through;color:var(--muted)}
+.sub{color:var(--muted);font-size:.8rem}
+.note{color:var(--muted);font-size:.82rem}
+.chk-txt{color:var(--chk)}
+.small{font-size:.85rem;color:var(--muted)}
+/* Phones: the table becomes one card per student, and everything tappable is at least 44px tall. */
+@media (max-width:640px){
+  body{font-size:16px}
+  .wrap{padding-block:20px calc(48px + env(safe-area-inset-bottom));gap:16px}
+  h1{font-size:1.45rem}
+  .panel{padding:16px}
+  .drop{min-height:112px;align-content:center}
+  button{min-height:44px}
+  .actions{display:grid;grid-template-columns:minmax(0,1fr)}
+  .stats .stat:first-child{grid-column:1/-1}
+  .filters button{padding:0 16px;font-size:.95rem}
+  .tbl{overflow:visible;border:none;border-radius:0}
+  table{min-width:0;font-size:.95rem}
+  table,tbody{display:block}
+  thead{display:none}
+  tbody{display:grid;gap:10px}
+  tr{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px 12px;align-items:start;border:1px solid var(--line);border-radius:8px;padding:14px;background:var(--surface)}
+  td{display:block;padding:0;border:none;min-width:0;overflow-wrap:anywhere}
+  td.c-st{padding-top:2px}
+  td.c-who{font-weight:600}
+  td.c-who .sub{font-weight:400}
+  td[data-label]{grid-column:1/-1;border-top:1px solid var(--line);padding-top:10px}
+  td[data-label]::before{content:attr(data-label);display:block;font-size:.78rem;color:var(--muted);margin-bottom:2px}
+  td:empty{display:none}
+  td[colspan]{grid-column:1/-1}
+  .mono{font-size:.88rem}
+  .sub,.note{font-size:.85rem}
+}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap" dir="rtl" lang="ar">
+  <header style="display:grid;gap:8px">
+    <h1>مراجعة تسجيلات الطلاب</h1>
+    <p class="lead">ارفعي ملف ردود الفورم وملف بيانات الطلاب. الصفحة بتقارن الإيميلات والمواد لكل طالب، وبتطلعلك نسخة مصححة من ملف البيانات وتقرير بكل اللي اتغير. الملفات مش بتترفع على أي سيرفر — كل الشغل بيحصل على جهازك.</p>
+  </header>
+
+  <section class="panel" aria-labelledby="h-files">
+    <h2 id="h-files">الملفات</h2>
+    <div class="files">
+      <label class="drop" id="drop-form">
+        <input type="file" id="in-form" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <span class="step">الملف الأول</span>
+        <span class="what">ردود الفورم</span>
+        <span class="hint">الملف اللي بيتنزل من Microsoft Forms (Excel)</span>
+        <span class="chosen" id="name-form"></span>
+      </label>
+      <label class="drop" id="drop-data">
+        <input type="file" id="in-data" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <span class="step">الملف التاني</span>
+        <span class="what">ملف بيانات الطلاب</span>
+        <span class="hint">الملف اللي فيه الإيميلات وأكواد المواد (course1 ...)</span>
+        <span class="chosen" id="name-data"></span>
+      </label>
+    </div>
+    <div class="actions">
+      <button class="primary" id="run" disabled>ابدأ المراجعة</button>
+      <span class="status-line" id="status">اختاري الملفين الأول.</span>
+    </div>
+    <div class="error" id="err" hidden></div>
+  </section>
+
+  <section class="panel" id="intro" aria-labelledby="h-intro">
+    <h2 id="h-intro">بيتراجع إيه</h2>
+    <div class="checks">
+      <div><b>الإيميل</b><span>بيتقارن بالإيميل اللي الطالب دخل بيه الفورم. لو غلط أو فاضي أو فيه مسافة زيادة بيتصلح.</span></div>
+      <div><b>المواد</b><span>أسماء المواد في الفورم بتتحول لأكواد من لائحة المقررات، وبتتقارن بخانات course في الملف.</span></div>
+      <div><b>الطلاب الناقصين</b><span>أي طالب سجّل في الفورم ومش موجود في الملف بيتضاف في آخر الملف.</span></div>
+    </div>
+    <p class="small">الاسم والرقم القومي بيتستخدموا بس عشان نلاقي الطالب، ومش بيتعدلوا.</p>
+    <div class="legend">
+      <span><i class="sw" style="background:#C6EFCE"></i>أخضر = اتصلح</span>
+      <span><i class="sw" style="background:#DDEBF7"></i>أزرق = طالب جديد</span>
+      <span><i class="sw" style="background:#FCE4D6"></i>برتقالي = للتأكيد، من غير تعديل</span>
+    </div>
+  </section>
+
+  <section class="panel" id="results" aria-labelledby="h-res" hidden>
+    <div class="actions" style="justify-content:space-between">
+      <h2 id="h-res">النتيجة</h2>
+      <div class="actions">
+        <button class="primary" id="dl-fixed">تحميل الملف بعد التصحيح</button>
+        <button id="dl-report">تحميل تقرير المراجعة</button>
+      </div>
+    </div>
+    <p class="small" id="dl-msg" hidden></p>
+    <div class="stats" id="stats"></div>
+    <p class="small" id="extra-line"></p>
+    <div class="filters" role="group" aria-label="عرض">
+      <button data-f="all" aria-pressed="true">الكل</button>
+      <button data-f="fixed" aria-pressed="false">اتصلح</button>
+      <button data-f="new" aria-pressed="false">جديد</button>
+      <button data-f="check" aria-pressed="false">للتأكيد</button>
+      <button data-f="ok" aria-pressed="false">سليم</button>
+    </div>
+    <div class="tbl"><table>
+      <thead><tr><th style="width:92px">الحالة</th><th>الطالب</th><th>الإيميل</th><th>المواد</th><th>ملاحظات</th></tr></thead>
+      <tbody id="rows"></tbody>
+    </table></div>
+  </section>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script>
+/* ===== Registration check core (shared by the page and the Node test) ===== */
+const DEFAULT_COURSES = `CHM001 | كيمياء هندسية
+ENG001 | رسم هندسى -1
+ENG002 | مبادئ هندسة التصنيع
+ENG003 | رسم هندسى -2
+HUM001 | لغة انجليزية
+HUM002 | حاسبات وبرمجة
+HUM003 | القضايا المجتمعية
+HUME10 | لغة المانية
+MAT001 | رياضيات -1
+MAT002 | رياضيات-2
+MCH001 | ميكانيكا-1
+MCH002 | ميكانيكا-2
+PHY001 | فيزياء -1
+PHY002 | فيزياء-2
+CVE101 | هندسه انشائيه 1
+ELC111 | النبائط والدوائر الالكترونية
+ELC121 | مدخل الي الدوائر المنطقية والبرمجة
+ELC151 | مبادئ بث المعلومات
+ELP111 | الدوائر الكهربيه
+ELP112 | القياسات الكهربيه
+ELP121 | مدخل الي أنظمة الطاقه
+ELP122 | المواد الكهربية
+ENG101 | الكتابة التقنية
+MAT101 | رياضيات 3
+MAT102 | رياضيات 4
+MCH101 | ميكانيكا 3
+HUME01 | نهر النيل:تاريخ حاضر ومستقبل
+HUME02 | القانون واخلاقيات المهنة
+HUME03 | الابتكار وريادة الاعمال
+HUME04 | التفكير الناقد
+HUME05 | القيادة والادارة
+HUME06 | مبادئ الادارة والتسويق
+HUME07 | ادارة المخاطر والسلامة المهنية
+HUME08 | المحاسبة
+HUME09 | مهارات الاتصال والعرض
+ELC211 | الكترونيات الجوامد و النبائط
+ELC212 | الدوائر الإلكترونية-2
+ELC221 | تصميم الدوائر المنطقية
+ELC222 | المعالجات الدقيقة و الربط البيني
+ELC231 | المجالات الكهرومغناطيسية للاتصالات
+ELC241 | الإشارات و النظم
+ELP211 | الدوائر الكهربيه المتقدمة
+ELP222 | نظم القوي الكهربية
+MAT203 | نظرية الاحتمالات
+MAT204 | الرياضيات الحسابية
+TRN201 | تدريب ميدانى 1 (P/F)
+ELC312 | الدوائر المتكاملة التناظرية
+ELC322 | المتحكمات الدقيقة و الأنظمة المدمجة
+ELC331 | الموجات الكهرومغناطيسية و الصوتيات
+ELC332 | أوساط النقل الميكروموجية و البصرية
+ELC341 | معالجة الإشارات الرقمية
+ELC351 | الإتصالات التناظرية
+ELC352 | مقدمة في الإتصالات الرقمية
+ELP335 | الآلات الكهربية
+TRN301 | تدريب ميدانى 2 (P/F)
+ELC311 | مقدمة فى الميكاترونيكس
+ELC321 | هياكل البيانات1
+ELC313 | نبائط الاتصالات البصرية
+ELC323 | نظم التشغيل
+ELC342 | موضوعات مختارة في معالجة الاشارات الرقمية
+ELC401 | مشروع التخرج 1 (P/F)
+ELC402 | مشروع التخرج-2
+ELC431 | هندسة الهوائيات
+ELC441 | نظم التحكم الآلي
+ELC451 | الإتصالات الرقمية
+ELC453 | شبكات اتصالات البيانات
+ELC456 | قوانين ولوائح الإتصالات
+ELC411 | الدوائر المتكاملة الرقمية
+ELC432 | هندسة الراديو و الميكروموجيات
+ELC452 | نظم الاتصالات البصرية
+ELC421 | عمارة الحاسب
+ELC461 | الهندسة الحيوية الطبية
+ELC462 | هندسة الصوت
+ELC412 | الكترونيات وأجهزة تردد الراديو
+ELC454 | الاتصالات اللاسلكية
+ELC463 | مقدمة فى الروبوتات
+ELC413 | نمذجة وتصميم الدوائر المتكاملة ذوات التكامل الكبير جدا
+ELC455 | الاتصالات عبر الاقمار الاصطناعيه ونظم الملاحة
+ELC464 | الحل الأمثل للأنظمة و تطبيقاته`;
+
+const AR_DIGITS = { '٠':'0','١':'1','٢':'2','٣':'3','٤':'4','٥':'5','٦':'6','٧':'7','٨':'8','٩':'9','۰':'0','۱':'1','۲':'2','۳':'3','۴':'4','۵':'5','۶':'6','۷':'7','۸':'8','۹':'9' };
+const toLatinDigits = s => String(s).replace(/[٠-٩۰-۹]/g, d => AR_DIGITS[d]);
+const normName = s => String(s)
+  .replace(/[إأآا]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/ـ/g, '')
+  .replace(/[^\p{L}\p{N}]/gu, '').replace(/[يه]/g, '').toLowerCase();
+const cleanEmail = s => String(s || '').replace(/[\s ​-‏⁠﻿]/g, '');
+const emailKey = s => cleanEmail(s).toLowerCase();
+const codeKey = s => String(s || '').replace(/\s/g, '').toUpperCase();
+const isCode = s => /^[A-Z]{3}[A-Z0-9]{3}$/.test(codeKey(s));
+const nidKey = v => { const d = toLatinDigits(v == null ? '' : String(v)).replace(/\.0+$/, '').replace(/\D/g, ''); return d; };
+
+function parseCourseList(text) {
+  const map = new Map(), names = new Map(), bad = [];
+  for (const raw of String(text).split(/\r?\n/)) {
+    const line = raw.trim(); if (!line) continue;
+    const m = line.match(/^([A-Za-z]{3}\s?[A-Za-z0-9]{3})\s*[|\t:،,-]?\s*(.+)$/);
+    if (!m) { bad.push(line); continue; }
+    const code = codeKey(m[1]);
+    map.set(normName(m[2]), code);
+    if (!names.has(code)) names.set(code, m[2].trim());
+  }
+  return { map, names, bad };
+}
+
+function cellVal(cell) {
+  let v = cell && cell.value;
+  if (v == null) return null;
+  if (typeof v === 'object' && !(v instanceof Date)) {
+    if (v.richText) v = v.richText.map(t => t.text).join('');
+    else if ('result' in v) v = v.result;
+    else if ('text' in v) v = typeof v.text === 'object' && v.text.richText ? v.text.richText.map(t => t.text).join('') : v.text;
+    else if (v.error) v = null;
+  }
+  return v;
+}
+const str = v => v == null ? '' : (v instanceof Date ? v.toISOString().slice(0, 10) : String(v));
+
+function findCol(headers, preds) {
+  for (const p of preds) { const i = headers.findIndex(h => h && p(h)); if (i >= 0) return i + 1; }
+  return 0;
+}
+const has = t => h => normName(h).includes(normName(t));
+const eq = t => h => h.trim() === t;
+
+/* ---------- read the form export ---------- */
+function readForm(wb) {
+  const ws = wb.worksheets[0];
+  const H = []; ws.getRow(1).eachCell({ includeEmpty: true }, (c, i) => { H[i - 1] = str(cellVal(c)).trim(); });
+  const col = {
+    id: findCol(H, [eq('ID'), eq('المعرّف'), eq('المعرف')]),
+    done: findCol(H, [has('وقت الإكمال'), has('Completion time')]),
+    login: findCol(H, [eq('البريد الإلكتروني'), eq('Email'), has('البريد الإلكتروني')]),
+    typed: findCol(H, [has('الايميل الجامع'), has('الإيميل الجامع'), has('الجامعى'), has('الجامعي')]),
+    nid: findCol(H, [has('الرقم القومى'), has('الرقم القومي')]),
+    name: findCol(H, [has('البيانات الأساسية'), has('الاسم'), eq('Name')]),
+    level: findCol(H, [has('المستوى')]),
+    amount: findCol(H, [has('قيمة الايصال'), has('قيمة الإيصال'), has('المبلغ')]),
+    paid: findCol(H, [has('تاريخ الدفع')]),
+    receipt: findCol(H, [has('رقم الايصال'), has('رقم الإيصال')]),
+  };
+  const courseCols = H.map((h, i) => h && normName(h).includes(normName('مقررات')) ? i + 1 : 0).filter(Boolean);
+  const missing = [];
+  if (!col.login) missing.push('البريد الإلكتروني');
+  if (!col.nid) missing.push('الرقم القومى');
+  if (!courseCols.length) missing.push('أعمدة المقررات');
+  if (missing.length) throw new Error('ملف الفورم مش فيه الأعمدة دي: ' + missing.join('، ') + '. تأكدي إنك اخترتي ملف الفورم في الخانة الأولى.');
+  const rows = [];
+  for (let r = 2; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r); const g = k => col[k] ? cellVal(row.getCell(col[k])) : null;
+    if (!g('login') && !g('nid') && !g('name')) continue;
+    const names = [];
+    for (const c of courseCols) {
+      const v = cellVal(row.getCell(c));
+      if (v != null) for (const n of String(v).split(/[;؛]/)) { const t = n.trim(); if (t) names.push(t); }
+    }
+    rows.push({
+      r, id: g('id') != null ? String(g('id')).replace(/\.0+$/, '') : String(r - 1),
+      login: str(g('login')).trim(), typed: str(g('typed')).trim(), nid: nidKey(g('nid')),
+      name: str(g('name')).trim(), level: str(g('level')).trim(), amount: g('amount'),
+      paid: g('paid'), receipt: str(g('receipt')).trim(), courseNames: names,
+    });
+  }
+  // keep each student's last submission
+  const byKey = new Map();
+  for (const x of rows) {
+    const k = x.nid || ('@' + emailKey(x.login));
+    const prev = byKey.get(k);
+    x.allIds = prev ? prev.allIds.concat(x.id) : [x.id];
+    byKey.set(k, x);
+  }
+  return { students: [...byKey.values()], submissions: rows.length };
+}
+
+/* ---------- read the data file ---------- */
+function readData(wb) {
+  const ws = wb.worksheets.find(w => w.state !== 'hidden' && !/سجل التعديلات/.test(w.name)) || wb.worksheets[0];
+  let hr = 0, H = [];
+  for (let r = 1; r <= Math.min(6, ws.rowCount); r++) {
+    const h = []; ws.getRow(r).eachCell({ includeEmpty: true }, (c, i) => { h[i - 1] = str(cellVal(c)).trim(); });
+    if (h.some(x => x && (/^course/i.test(x) || normName(x).includes(normName('الايميل'))))) { hr = r; H = h; break; }
+  }
+  if (!hr) throw new Error('ملف البيانات مش فيه صف عناوين (الايميل / course1 ...). تأكدي إنك اخترتي ملف البيانات في الخانة التانية.');
+  const col = {
+    date: findCol(H, [has('التاريخ')]) || 1,
+    nid: findCol(H, [has('الرقم القومى'), has('الرقم القومي')]),
+    name: findCol(H, [has('الاسم')]),
+    email: findCol(H, [has('الايميل'), has('الإيميل'), h => /mail/i.test(h)]),
+    amount: findCol(H, [has('المبلغ')]),
+  };
+  const courseCols = H.map((h, i) => /^course\s*\d*/i.test(h || '') ? i + 1 : 0).filter(Boolean);
+  if (!col.email || !courseCols.length) throw new Error('ملف البيانات لازم يكون فيه عمود "الايميل" وأعمدة course1, course2 ...');
+  const rows = []; let last = hr, humSpace = false;
+  for (let r = hr + 1; r <= ws.rowCount; r++) {
+    const row = ws.getRow(r);
+    const nidv = col.nid ? cellVal(row.getCell(col.nid)) : null, namev = col.name ? cellVal(row.getCell(col.name)) : null;
+    const emv = cellVal(row.getCell(col.email));
+    if (nidv == null && namev == null && (emv == null || String(emv).trim() === '')) continue;
+    last = r;
+    const courses = courseCols.map(c => { const v = cellVal(row.getCell(c)); return { col: c, raw: v == null ? '' : String(v).trim() }; });
+    courses.forEach(c => { if (/^HUM\s+E/i.test(c.raw)) humSpace = true; });
+    rows.push({ r, nid: nidKey(nidv), name: str(namev).trim(), emailRaw: emv == null ? '' : String(emv), courses });
+  }
+  return { ws, hr, col, courseCols, rows, last, humSpace };
+}
+
+const COLORS = { fix: 'FFC6EFCE', add: 'FFDDEBF7', check: 'FFFCE4D6' };
+function paint(cell, argb, note) {
+  cell.style = JSON.parse(JSON.stringify(cell.style || {})); // styles are shared between cells in ExcelJS
+  cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb } };
+  if (note) cell.note = note;
+}
+
+/* ---------- main ---------- */
+function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
+  const { map: CMAP, names: CNAMES } = parseCourseList(courseText);
+  const form = readForm(formWb);
+  const data = readData(dataWb);
+  const { ws, col } = data;
+  const fmtCode = c => (data.humSpace && /^HUME\d/.test(c)) ? 'HUM E' + c.slice(4) : c;
+
+  const byNid = new Map(), byEmail = new Map();
+  for (const d of data.rows) {
+    if (d.nid) (byNid.get(d.nid) || byNid.set(d.nid, []).get(d.nid)).push(d);
+    const k = emailKey(d.emailRaw); if (k) (byEmail.get(k) || byEmail.set(k, []).get(k)).push(d);
+  }
+  const used = new Set(), log = [], results = [];
+  const L = (row, field, who, before, after, why) => log.push({ row, field, who, before, after, why });
+
+  for (const s of form.students) {
+    const res = { s, notes: [], email: { status: 'ok' }, courses: { status: 'ok' } };
+    // courses chosen in the form → codes
+    const formCodes = [], unknown = [];
+    for (const n of s.courseNames) {
+      const c = CMAP.get(normName(n));
+      if (c) { if (!formCodes.includes(c)) formCodes.push(c); } else unknown.push(n);
+    }
+    res.formCodes = formCodes; res.unknown = unknown;
+    if (s.allIds.length > 1) res.notes.push(`سجّل في الفورم ${s.allIds.length} مرات (${s.allIds.join('، ')}) — تمت مراجعة آخر مرة`);
+
+    let m = (s.nid && byNid.get(s.nid)) || null;
+    if (!m) m = byEmail.get(emailKey(s.login)) || (s.typed && byEmail.get(emailKey(s.typed))) || null;
+    if (!m) { res.status = 'new'; results.push(res); continue; }
+    if (m.length > 1) res.notes.push(`الطالب متكرر في الملف (صفوف ${m.map(x => x.r).join('، ')}) — تمت مراجعة أول صف`);
+    const d = m[0]; m.forEach(x => used.add(x)); res.d = d; res.row = d.r;
+    const who = d.name || s.name;
+
+    // ---- email ----
+    const ecell = ws.getRow(d.r).getCell(col.email);
+    const de = d.emailRaw, login = cleanEmail(s.login), typed = cleanEmail(s.typed);
+    res.email.before = cleanEmail(de);
+    if (!cleanEmail(de)) {
+      ecell.value = login; paint(ecell, COLORS.fix, 'الإيميل كان فاضي — اتضاف من الفورم');
+      res.email = { status: 'fixed', before: '', after: login, why: 'كان فاضي' };
+      L(d.r, 'الايميل', who, '(فاضي)', login, 'الإيميل كان فاضي — اتضاف من الفورم');
+    } else if (emailKey(de) !== emailKey(login) && emailKey(de) !== emailKey(typed)) {
+      ecell.value = login; paint(ecell, COLORS.fix, 'كان: ' + de.trim() + '\nالصح حسب الإيميل اللي الطالب دخل بيه الفورم');
+      res.email = { status: 'fixed', before: de.trim(), after: login, why: 'مختلف عن الفورم' };
+      L(d.r, 'الايميل', who, de.trim(), login, 'الإيميل مختلف عن الإيميل اللي الطالب دخل بيه الفورم');
+    } else if (emailKey(de) !== emailKey(login)) {
+      paint(ecell, COLORS.check, `للتأكيد فقط (من غير تعديل): الطالب بعت الفورم من حساب ${login} وكتب إيميله ${typed}. الموجود هنا هو اللي كتبه.`);
+      res.email = { status: 'check', before: de.trim(), why: `الفورم اتبعت من حساب ${login}، والطالب كتب ${typed}` };
+      L(d.r, 'الايميل', who, de.trim(), '(من غير تعديل — للتأكيد)', `الفورم اتبعت من حساب ${login}`);
+    } else if (de !== cleanEmail(de)) {
+      ecell.value = cleanEmail(de); paint(ecell, COLORS.fix, 'اتشالت مسافة زيادة من الإيميل');
+      res.email = { status: 'fixed', before: de, after: cleanEmail(de), why: 'مسافة زيادة' };
+      L(d.r, 'الايميل', who, JSON.stringify(de), cleanEmail(de), 'اتشالت مسافة زيادة من الإيميل');
+    }
+    if (typed && emailKey(typed) !== emailKey(login) && res.email.status !== 'check')
+      res.notes.push(`الطالب كتب إيميله في الفورم غلط (${typed}) — المعتمد هو اللي دخل بيه (${login})`);
+
+    // ---- courses ----
+    res.courses.before = d.courses.filter(c => c.raw).map(c => c.raw);
+    const text = d.courses.filter(c => c.raw && !isCode(c.raw));
+    if (text.length) res.notes.push('مكتوب في خانات المواد: ' + text.map(c => c.raw).join('، ') + ' (اتساب زي ما هو)');
+    if (unknown.length) {
+      res.courses = { status: 'check', before: res.courses.before, why: 'مواد مش موجودة في لائحة المقررات: ' + unknown.join('، ') };
+      d.courses.forEach(c => c.raw && isCode(c.raw) && paint(ws.getRow(d.r).getCell(c.col), COLORS.check));
+      L(d.r, 'المواد', who, res.courses.before.join(', '), '(من غير تعديل — للتأكيد)', res.courses.why);
+    } else {
+      const want = new Set(formCodes), seen = new Set(), wrong = [], empty = [];
+      for (const c of d.courses) {
+        if (!c.raw) { empty.push(c); continue; }
+        if (!isCode(c.raw)) continue;
+        const k = codeKey(c.raw);
+        if (want.has(k) && !seen.has(k)) seen.add(k); else wrong.push(c);
+      }
+      const missing = formCodes.filter(c => !seen.has(c));
+      if (wrong.length || missing.length) {
+        const changes = [];
+        for (const c of wrong) {
+          const cell = ws.getRow(d.r).getCell(c.col);
+          const n = missing.shift();
+          if (n) {
+            cell.value = fmtCode(n);
+            paint(cell, COLORS.fix, `كان: ${c.raw}\nالطالب اختار "${CNAMES.get(n) || n}" = ${n}`);
+            changes.push({ from: c.raw, to: fmtCode(n) });
+            L(d.r, ws.getRow(data.hr).getCell(c.col).value, who, c.raw, fmtCode(n), `الطالب اختار "${CNAMES.get(n) || n}" في الفورم`);
+          } else {
+            cell.value = null; paint(cell, COLORS.fix, `كان: ${c.raw}\nالطالب ما اختارش المادة دي في الفورم`);
+            changes.push({ from: c.raw, to: null });
+            L(d.r, ws.getRow(data.hr).getCell(c.col).value, who, c.raw, '(اتشالت)', 'الطالب ما اختارش المادة دي في الفورم');
+          }
+        }
+        for (const n of missing.splice(0)) {
+          const c = empty.shift();
+          if (!c) { res.notes.push('مفيش خانات مواد فاضية كفاية لإضافة ' + n); continue; }
+          const cell = ws.getRow(d.r).getCell(c.col);
+          cell.value = fmtCode(n); paint(cell, COLORS.fix, `اتضافت: الطالب اختار "${CNAMES.get(n) || n}" = ${n}`);
+          changes.push({ from: null, to: fmtCode(n) });
+          L(d.r, ws.getRow(data.hr).getCell(c.col).value, who, '(فاضي)', fmtCode(n), `الطالب اختار "${CNAMES.get(n) || n}" في الفورم`);
+        }
+        res.courses = { status: 'fixed', before: res.courses.before, changes };
+      }
+    }
+    res.status = (res.email.status === 'check' || res.courses.status === 'check') ? 'check'
+      : (res.email.status === 'fixed' || res.courses.status === 'fixed') ? 'fixed' : 'ok';
+    results.push(res);
+  }
+
+  // ---- add students missing from the data file ----
+  const newOnes = results.filter(x => x.status === 'new').sort((a, b) => Number(a.s.id) - Number(b.s.id));
+  if (newOnes.length) {
+    const start = data.last + 3, tmpl = ws.getRow(data.last), end = start + newOnes.length - 1;
+    const lastCol = Math.max(...data.courseCols, col.email, col.amount || 0, col.nid || 0);
+    let dateFmt = 'dd/mm/yyyy';
+    for (const d of data.rows) { const c = ws.getRow(d.r).getCell(col.date); if (c.value instanceof Date && c.numFmt) { dateFmt = c.numFmt; break; } }
+    newOnes.forEach((x, i) => {
+      const r = start + i, row = ws.getRow(r), s = x.s;
+      for (let c = 1; c <= lastCol; c++) row.getCell(c).style = JSON.parse(JSON.stringify(tmpl.getCell(c).style || {}));
+      const amt = Number(toLatinDigits(str(s.amount)).replace(/[^\d.]/g, ''));
+      if (col.nid) row.getCell(col.nid).value = s.nid.length >= 10 && s.nid.length <= 15 ? Number(s.nid) : s.nid;
+      if (col.name) row.getCell(col.name).value = s.name;
+      row.getCell(col.email).value = cleanEmail(s.login);
+      if (col.amount) row.getCell(col.amount).value = isFinite(amt) && str(s.amount).match(/\d/) ? amt : str(s.amount);
+      x.formCodes.forEach((code, j) => { if (data.courseCols[j]) row.getCell(data.courseCols[j]).value = fmtCode(code); });
+      for (let c = 1; c <= lastCol; c++) if (c !== col.date) paint(row.getCell(c), COLORS.add);
+      row.getCell(col.email).note = `طالب جديد من الفورم (رقم ${s.allIds.join('، ')})` +
+        (s.receipt ? `\nرقم الإيصال: ${s.receipt}` : '') + (s.paid ? `\nتاريخ الدفع: ${str(s.paid)}` : '') +
+        (x.unknown.length ? `\nمواد مش في اللائحة (ما اتضافتش): ${x.unknown.join('، ')}` : '');
+      x.row = r;
+      L(r, 'صف جديد', s.name, '', cleanEmail(s.login) + ' | ' + x.formCodes.map(fmtCode).join(', '), 'سجّل في الفورم ومش موجود في الملف');
+    });
+    const dc = ws.getRow(start).getCell(col.date);
+    dc.value = today; dc.style = JSON.parse(JSON.stringify(tmpl.getCell(col.date).style || {})); dc.numFmt = dateFmt;
+    dc.alignment = { vertical: 'middle', horizontal: 'center' };
+    paint(dc, COLORS.add);
+    if (end > start) ws.mergeCells(start, col.date, end, col.date);
+  }
+
+  // ---- change log sheet in the corrected file ----
+  const old = dataWb.getWorksheet('سجل التعديلات'); if (old) dataWb.removeWorksheet(old.id);
+  const lg = dataWb.addWorksheet('سجل التعديلات', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }] });
+  lg.columns = [{ header: 'الصف', width: 7 }, { header: 'العمود', width: 12 }, { header: 'الطالب', width: 32 },
+    { header: 'القيمة القديمة', width: 34 }, { header: 'القيمة الجديدة', width: 50 }, { header: 'السبب', width: 55 }];
+  log.forEach(e => lg.addRow([e.row, e.field, e.who, e.before, e.after, e.why]));
+  lg.addRow([]); lg.addRow(['دليل الألوان']).font = { bold: true };
+  [['أخضر = خانة اتصلحت', COLORS.fix], ['أزرق = طالب جديد اتضاف', COLORS.add], ['برتقالي = من غير تعديل، للتأكيد', COLORS.check]]
+    .forEach(([t, c]) => { const rw = lg.addRow([t]); rw.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: c } }; });
+  styleHeader(lg);
+
+  const extra = data.rows.filter(d => !used.has(d) && !newOnes.some(x => x.row === d.r));
+  const reportWb = buildReport(ExcelJS, results, extra, fmtCode);
+  const count = k => results.filter(x => x.status === k).length;
+  return {
+    results, extra, log, reportWb, submissions: form.submissions,
+    stats: {
+      students: results.length, ok: count('ok'), fixed: count('fixed'), check: count('check'), added: count('new'),
+      emailFixes: results.filter(x => x.email.status === 'fixed').length,
+      courseFixes: results.filter(x => x.courses.status === 'fixed').length, extra: extra.length,
+    },
+  };
+}
+
+function styleHeader(ws) {
+  const h = ws.getRow(1);
+  h.eachCell(c => { c.font = { bold: true, color: { argb: 'FFFFFFFF' }, name: 'Arial' }; c.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1F3A5F' } }; c.alignment = { vertical: 'middle', wrapText: true }; });
+  ws.eachRow((r, i) => { if (i > 1) r.eachCell(c => { c.alignment = { vertical: 'top', wrapText: true }; }); });
+}
+
+const chText = x => x.from && x.to ? `${x.to} بدل ${x.from}` : x.to ? `اتضافت ${x.to}` : `اتشالت ${x.from}`;
+const STATUS_AR = { ok: 'سليم', fixed: 'اتصلح', check: 'للتأكيد', new: 'طالب جديد' };
+function buildReport(ExcelJS, results, extra, fmtCode) {
+  const wb = new ExcelJS.Workbook();
+  const ws = wb.addWorksheet('المراجعة', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }] });
+  ws.columns = [
+    { header: 'الحالة', width: 12 }, { header: 'رقم الفورم', width: 10 }, { header: 'الصف في الملف', width: 10 },
+    { header: 'الطالب', width: 30 }, { header: 'المستوى', width: 9 }, { header: 'إيميل الفورم', width: 34 },
+    { header: 'الإيميل في الملف (قبل)', width: 34 }, { header: 'الإيميل', width: 40 },
+    { header: 'المواد في الفورم', width: 34 }, { header: 'المواد في الملف (قبل)', width: 34 }, { header: 'المواد', width: 34 },
+    { header: 'ملاحظات', width: 50 }];
+  const order = { check: 0, fixed: 1, new: 2, ok: 3 };
+  [...results].sort((a, b) => order[a.status] - order[b.status] || (a.row || 0) - (b.row || 0)).forEach(x => {
+    const e = x.email, c = x.courses;
+    const eTxt = x.status === 'new' ? 'يتضاف: ' + cleanEmail(x.s.login)
+      : e.status === 'fixed' ? `اتصلح (${e.why}) ← ${e.after}` : e.status === 'check' ? 'للتأكيد: ' + e.why : 'سليم';
+    const cTxt = x.status === 'new' ? 'يتضاف: ' + x.formCodes.map(fmtCode).join(', ')
+      : c.status === 'fixed' ? 'اتصلح: ' + c.changes.map(chText).join(' ، ') : c.status === 'check' ? 'للتأكيد: ' + c.why : 'سليم';
+    const r = ws.addRow([STATUS_AR[x.status], x.s.allIds.join(', '), x.row || '', x.s.name, x.s.level, cleanEmail(x.s.login),
+      e.before || '', eTxt, x.formCodes.map(fmtCode).join(', ') + (x.unknown.length ? ' + ' + x.unknown.join('، ') : ''),
+      (c.before || []).join(', '), cTxt, x.notes.join(' • ')]);
+    const col = { ok: 'FFD4EDDA', fixed: 'FFC6EFCE', check: 'FFFCE4D6', new: 'FFDDEBF7' }[x.status];
+    r.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: col } };
+  });
+  styleHeader(ws); ws.autoFilter = { from: 'A1', to: 'L1' };
+  const w2 = wb.addWorksheet('في الملف ومش في الفورم', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }] });
+  w2.columns = [{ header: 'الصف', width: 8 }, { header: 'الطالب', width: 34 }, { header: 'الإيميل', width: 36 }, { header: 'المواد', width: 44 }];
+  extra.forEach(d => w2.addRow([d.r, d.name, cleanEmail(d.emailRaw), d.courses.filter(c => c.raw).map(c => c.raw).join(', ')]));
+  styleHeader(w2);
+  return wb;
+}
+
+if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES, parseCourseList, cleanEmail, STATUS_AR };
+
+</script>
+<script>
+(() => {
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const bufs = { form: null, data: null }, names = { form: '', data: '' };
+  let last = null, filter = 'all';
+
+  // files
+  function bind(kind) {
+    const input = $('in-' + kind), box = $('drop-' + kind);
+    input.addEventListener('change', async () => {
+      const f = input.files && input.files[0]; if (!f) return;
+      if (!/\.xlsx$/i.test(f.name)) { showErr('الملف لازم يكون Excel بصيغة ‎.xlsx‎ — لو هو ‎.xls‎ أو ‎.csv‎ افتحيه في Excel واحفظيه ‎.xlsx‎.'); return; }
+      bufs[kind] = await f.arrayBuffer(); last = null; $('results').hidden = true; $('intro').hidden = false; names[kind] = f.name;
+      $('name-' + kind).textContent = f.name; box.classList.add('ready'); hideErr(); ready();
+    });
+    ['dragenter','dragover'].forEach(e => box.addEventListener(e, () => box.classList.add('over')));
+    ['dragleave','drop'].forEach(e => box.addEventListener(e, () => box.classList.remove('over')));
+  }
+  bind('form'); bind('data');
+  function ready() {
+    const ok = bufs.form && bufs.data; $('run').disabled = !ok;
+    $('status').textContent = ok ? 'جاهز.' : (bufs.form ? 'فاضل ملف البيانات.' : bufs.data ? 'فاضل ملف الفورم.' : 'اختاري الملفين الأول.');
+  }
+  const showErr = m => { $('err').textContent = m; $('err').hidden = false; };
+  const hideErr = () => { $('err').hidden = true; };
+
+  $('run').onclick = async () => {
+    hideErr(); $('run').disabled = true; $('status').textContent = 'بيراجع...';
+    try {
+      if (typeof ExcelJS === 'undefined') throw new Error('مكتبة Excel ما اتحملتش. اتأكدي من الإنترنت وافتحي الصفحة تاني.');
+      const fw = new ExcelJS.Workbook(); await fw.xlsx.load(bufs.form.slice(0));
+      const dw = new ExcelJS.Workbook(); await dw.xlsx.load(bufs.data.slice(0));
+      const now = new Date(); const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
+      const out = runCheck(ExcelJS, fw, dw, DEFAULT_COURSES, today);
+      out.dataWb = dw; last = out; render(); $('intro').hidden = true; $('results').hidden = false;
+      $('status').textContent = `اتراجع ${out.stats.students} طالب (${out.submissions} تسجيل في الفورم).`;
+      $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+    } catch (e) {
+      console.error(e); showErr(e && e.message ? e.message : 'حصلت مشكلة في قراءة الملفات.'); $('status').textContent = '';
+    } finally { $('run').disabled =!(bufs.form && bufs.data); }
+  };
+
+  function render() {
+    const s = last.stats;
+    const stat = (n, l, cls) => `<div class="stat ${cls}"><span class="n">${n}</span><span class="l">${l}</span></div>`;
+    $('stats').innerHTML = stat(s.students, 'طالب في الفورم', '') + stat(s.fixed, `اتصلح (${s.emailFixes} إيميل، ${s.courseFixes} مواد)`, 'fixed')
+      + stat(s.added, 'طالب جديد اتضاف', 'new') + stat(s.check, 'للتأكيد', 'check') + stat(s.ok, 'سليم', 'ok');
+    $('extra-line').textContent = s.extra ? `فيه ${s.extra} طالب في الملف مش موجودين في الفورم ده — ما اتغيروش، وهتلاقيهم في التقرير.` : '';
+    const order = { check: 0, fixed: 1, new: 2, ok: 3 };
+    const rows = [...last.results].sort((a, b) => order[a.status] - order[b.status] || (a.row || 0) - (b.row || 0))
+      .filter(x => filter === 'all' || x.status === filter);
+    const fc = c => c.replace(/^HUME(\d)/, 'HUM E$1');
+    const mail = v => esc(v).replace('@', '@<wbr>'); // long emails break after the @ first
+    $('rows').innerHTML = rows.map(x => {
+      const e = x.email, c = x.courses;
+      let em, co;
+      if (x.status === 'new') { em = `<span class="mono">${mail(cleanEmail(x.s.login))}</span>`; co = `<span class="mono">${esc(x.formCodes.map(fc).join(', '))}</span>` + (x.unknown.length ? `<div class="chk-txt">مش في اللائحة: ${esc(x.unknown.join('، '))}</div>` : ''); }
+      else {
+        em = e.status === 'fixed' ? `<div class="mono was">${mail(e.before || '(فاضي)')}</div><div class="mono">${mail(e.after)}</div><div class="sub">${esc(e.why)}</div>`
+          : e.status === 'check' ? `<div class="mono">${mail(e.before)}</div><div class="chk-txt">${esc(e.why)}</div>`
+          : `<span class="mono" style="color:var(--muted)">${mail(e.before)}</span>`;
+        co = c.status === 'fixed' ? c.changes.map(t => `<div class="chg">${t.from ? `<span class="mono was">${esc(t.from)}</span>` : '<span class="sub">اتضافت</span>'} ${t.to ? `<span class="mono">${esc(t.to)}</span>` : '<span class="sub">اتشالت</span>'}</div>`).join('')
+          : c.status === 'check' ? `<div class="chk-txt">${esc(c.why)}</div>` : '<span class="sub">مطابقة</span>';
+      }
+      return `<tr><td class="c-st"><span class="pill ${x.status}">${STATUS_AR[x.status]}</span></td>
+        <td class="c-who">${esc(x.s.name)}<div class="sub">${x.row ? 'صف ' + x.row : ''}${x.s.level ? ' · ' + esc(x.s.level) : ''}</div></td>
+        <td data-label="الإيميل">${em}</td><td data-label="المواد">${co}</td><td class="note" data-label="ملاحظات">${x.notes.map(esc).join('<br>')}</td></tr>`;
+    }).join('') || `<tr><td colspan="5" class="sub">مفيش طلاب في الفلتر ده.</td></tr>`;
+  }
+  document.querySelectorAll('.filters button').forEach(b => b.onclick = () => {
+    filter = b.dataset.f; document.querySelectorAll('.filters button').forEach(x => x.setAttribute('aria-pressed', x === b)); render();
+  });
+
+  // downloads
+  const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  async function save(wb, filename) {
+    const msg = $('dl-msg');
+    try {
+      const buf = await wb.xlsx.writeBuffer();
+      const url = URL.createObjectURL(new Blob([buf], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' }));
+      const a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 60000);
+      msg.hidden = false; msg.textContent = 'اتحمّل: ' + filename + (isIOS ? ' — على الآيفون: لو الملف اتفتح معاينة، اضغطي مشاركة ← حفظ في الملفات.' : '');
+    } catch (e) {
+      msg.hidden = false; msg.textContent = 'ما قدرتش أحمّل الملف' + (e && e.message ? ': ' + e.message : '.');
+    }
+  }
+  const stamp = () => new Date().toISOString().slice(0, 10);
+  $('dl-fixed').onclick = () => last && save(last.dataWb, 'students-data-corrected-' + stamp() + '.xlsx');
+  $('dl-report').onclick = () => last && save(last.reportWb, 'registration-review-' + stamp() + '.xlsx');
+})();
+</script>
+</body>
+</html>
