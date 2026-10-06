@@ -141,7 +141,7 @@ tr:last-child td{border-bottom:none}
 <div class="wrap" dir="rtl" lang="ar">
   <header style="display:grid;gap:12px">
     <div class="brand"><span class="mark"><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M10 6h10M10 12h10M10 18h10"/><path d="M3.5 6l1.5 1.5L7.5 5M3.5 12l1.5 1.5L7.5 11M3.5 18l1.5 1.5L7.5 17"/></svg></span><h1>مراجعة تسجيلات الطلاب</h1></div>
-    <p class="lead">ارفعي ملف ردود الفورم وملف بيانات الطلاب. الصفحة بتقارن الإيميلات والمواد لكل طالب، وبتطلعلك نسخة مصححة من ملف البيانات وتقرير بكل اللي اتغير. الملفات مش بتترفع على أي سيرفر — كل الشغل بيحصل على جهازك.</p>
+    <p class="lead">ارفع ملف ردود الفورم وملف بيانات الطلاب. الصفحة بتقارن الإيميلات والمواد لكل طالب، وبتطلعلك نسخة مصححة من ملف البيانات وتقرير بكل اللي اتغير. الملفات مش بتترفع على أي سيرفر — كل الشغل بيحصل على جهازك.</p>
   </header>
 
   <section class="panel" aria-labelledby="h-files">
@@ -166,7 +166,7 @@ tr:last-child td{border-bottom:none}
     </div>
     <div class="actions">
       <button class="primary" id="run" disabled>ابدأ المراجعة</button>
-      <span class="status-line" id="status">اختاري الملفين الأول.</span>
+      <span class="status-line" id="status">اختار الملفين الأول.</span>
     </div>
     <div class="error" id="err" hidden></div>
   </section>
@@ -360,7 +360,7 @@ function readForm(wb) {
   if (!col.login) missing.push('البريد الإلكتروني');
   if (!col.nid) missing.push('الرقم القومى');
   if (!courseCols.length) missing.push('أعمدة المقررات');
-  if (missing.length) throw new Error('ملف الفورم مش فيه الأعمدة دي: ' + missing.join('، ') + '. تأكدي إنك اخترتي ملف الفورم في الخانة الأولى.');
+  if (missing.length) throw new Error('ملف الفورم مش فيه الأعمدة دي: ' + missing.join('، ') + '. تأكد إنك اخترت ملف الفورم في الخانة الأولى.');
   const rows = [];
   for (let r = 2; r <= ws.rowCount; r++) {
     const row = ws.getRow(r); const g = k => col[k] ? cellVal(row.getCell(col[k])) : null;
@@ -396,7 +396,7 @@ function readData(wb) {
     const h = []; ws.getRow(r).eachCell({ includeEmpty: true }, (c, i) => { h[i - 1] = str(cellVal(c)).trim(); });
     if (h.some(x => x && (/^course/i.test(x) || normName(x).includes(normName('الايميل'))))) { hr = r; H = h; break; }
   }
-  if (!hr) throw new Error('ملف البيانات مش فيه صف عناوين (الايميل / course1 ...). تأكدي إنك اخترتي ملف البيانات في الخانة التانية.');
+  if (!hr) throw new Error('ملف البيانات مش فيه صف عناوين (الايميل / course1 ...). تأكد إنك اخترت ملف البيانات في الخانة التانية.');
   const col = {
     date: findCol(H, [has('التاريخ')]) || 1,
     nid: findCol(H, [has('الرقم القومى'), has('الرقم القومي')]),
@@ -641,7 +641,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
     const input = $('in-' + kind), box = $('drop-' + kind);
     input.addEventListener('change', async () => {
       const f = input.files && input.files[0]; if (!f) return;
-      if (!/\.xlsx$/i.test(f.name)) { showErr('الملف لازم يكون Excel بصيغة ‎.xlsx‎ — لو هو ‎.xls‎ أو ‎.csv‎ افتحيه في Excel واحفظيه ‎.xlsx‎.'); return; }
+      if (!/\.xlsx$/i.test(f.name)) { showErr('الملف لازم يكون Excel بصيغة ‎.xlsx‎ — لو هو ‎.xls‎ أو ‎.csv‎ افتحه في Excel واحفظه ‎.xlsx‎.'); return; }
       bufs[kind] = await f.arrayBuffer(); last = null; $('results').hidden = true; $('intro').hidden = false; names[kind] = f.name;
       $('name-' + kind).textContent = f.name; box.classList.add('ready'); hideErr(); ready();
     });
@@ -651,7 +651,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
   bind('form'); bind('data');
   function ready() {
     const ok = bufs.form && bufs.data; $('run').disabled = !ok;
-    $('status').textContent = ok ? 'جاهز.' : (bufs.form ? 'فاضل ملف البيانات.' : bufs.data ? 'فاضل ملف الفورم.' : 'اختاري الملفين الأول.');
+    $('status').textContent = ok ? 'جاهز.' : (bufs.form ? 'فاضل ملف البيانات.' : bufs.data ? 'فاضل ملف الفورم.' : 'اختار الملفين الأول.');
   }
   const showErr = m => { $('err').textContent = m; $('err').hidden = false; };
   const hideErr = () => { $('err').hidden = true; };
@@ -659,7 +659,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
   $('run').onclick = async () => {
     hideErr(); $('run').disabled = true; $('status').textContent = 'بيراجع...';
     try {
-      if (typeof ExcelJS === 'undefined') throw new Error('مكتبة Excel ما اتحملتش. اتأكدي من الإنترنت وافتحي الصفحة تاني.');
+      if (typeof ExcelJS === 'undefined') throw new Error('مكتبة Excel ما اتحملتش. اتأكد من الإنترنت وافتح الصفحة تاني.');
       const fw = new ExcelJS.Workbook(); await fw.xlsx.load(bufs.form.slice(0));
       const dw = new ExcelJS.Workbook(); await dw.xlsx.load(bufs.data.slice(0));
       const now = new Date(); const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -716,7 +716,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
       const a = document.createElement('a'); a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); a.remove();
       setTimeout(() => URL.revokeObjectURL(url), 60000);
-      msg.hidden = false; msg.textContent = 'اتحمّل: ' + filename + (isIOS ? ' — على الآيفون: لو الملف اتفتح معاينة، اضغطي مشاركة ← حفظ في الملفات.' : '');
+      msg.hidden = false; msg.textContent = 'اتحمّل: ' + filename + (isIOS ? ' — على الآيفون: لو الملف اتفتح معاينة، اضغط مشاركة ← حفظ في الملفات.' : '');
     } catch (e) {
       msg.hidden = false; msg.textContent = 'ما قدرتش أحمّل الملف' + (e && e.message ? ': ' + e.message : '.');
     }
