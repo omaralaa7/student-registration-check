@@ -147,7 +147,7 @@ tr:last-child td{border-bottom:none}
     <h2 id="h-files">الملفات</h2>
     <div class="files">
       <label class="drop" id="drop-form">
-        <input type="file" id="in-form" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <input type="file" id="in-form" accept=".xlsx,.xlsm,.xls,.et,.ods,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M9 10h6M9 14h6M9 18h3"/></svg>
         <span class="step">الملف الأول</span>
         <span class="what">ردود الفورم</span>
@@ -155,7 +155,7 @@ tr:last-child td{border-bottom:none}
         <span class="chosen" id="name-form"></span>
       </label>
       <label class="drop" id="drop-data">
-        <input type="file" id="in-data" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        <input type="file" id="in-data" accept=".xlsx,.xlsm,.xls,.et,.ods,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel">
         <svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 9.5h18M3 14.5h18M9 4v16"/></svg>
         <span class="step">الملف التاني</span>
         <span class="what">ملف بيانات الطلاب</span>
@@ -606,6 +606,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
   const $ = id => document.getElementById(id);
   const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
   const bufs = { form: null, data: null }, names = { form: '', data: '' };
+  const FORMATS = /\.(xlsx|xlsm|xls|et|ods)$/i; // not .csv: it can lose the 14-digit national IDs used for matching
   let last = null, filter = 'all';
 
   // files
@@ -613,7 +614,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
     const input = $('in-' + kind), box = $('drop-' + kind);
     input.addEventListener('change', async () => {
       const f = input.files && input.files[0]; if (!f) return;
-      if (!/\.xlsx$/i.test(f.name)) { showErr('الملف لازم يكون Excel بصيغة ‎.xlsx‎ — لو هو ‎.xls‎ أو ‎.csv‎ افتحه في Excel واحفظه ‎.xlsx‎.'); return; }
+      if (!FORMATS.test(f.name)) { showErr('الملف لازم يكون جدول Excel: ‎.xlsx‎ أو ‎.xls‎ أو ‎.et‎ أو ‎.ods‎. لو هو ‎.csv‎ افتحه في Excel واحفظه ‎.xlsx‎.'); return; }
       bufs[kind] = await f.arrayBuffer(); last = null; $('results').hidden = true; $('intro').hidden = false; names[kind] = f.name;
       $('name-' + kind).textContent = f.name; box.classList.add('ready'); hideErr(); ready();
     });
@@ -631,7 +632,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
   // Files saved by some editors (e.g. WPS Office) carry a "document properties" part that ExcelJS can't read
   // ("Unexpected xml node in parseOpen"). The properties aren't needed, so blank that part and load again.
   const EMPTY_CORE = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></cp:coreProperties>';
-  async function loadWb(buf) {
+  async function loadXlsx(buf) {
     try { const wb = new ExcelJS.Workbook(); await wb.xlsx.load(buf.slice(0)); return wb; }
     catch (e) {
       if (typeof JSZip === 'undefined' || !/Unexpected xml node/.test((e && e.message) || '')) throw e;
@@ -641,16 +642,34 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
       const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await zip.generateAsync({ type: 'arraybuffer' })); return wb;
     }
   }
+  // Older and other formats (.xls, WPS .et, .ods), and any .xlsx ExcelJS still can't open, are converted
+  // to .xlsx in the browser with SheetJS. It is only downloaded when such a file is actually used.
+  const needSheetJS = () => typeof XLSX !== 'undefined' ? Promise.resolve() : new Promise((res, rej) => {
+    const sc = document.createElement('script'); sc.src = 'https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js';
+    sc.onload = res; sc.onerror = () => rej(new Error('مكتبة قراءة الصيغ التانية ما اتحملتش. اتأكد من الإنترنت وجرّب تاني.'));
+    document.head.appendChild(sc);
+  });
+  async function loadWb(buf, name) {
+    let first = null;
+    if (/\.(xlsx|xlsm)$/i.test(name)) { try { return await loadXlsx(buf); } catch (e) { first = e; } }
+    try {
+      await needSheetJS();
+      const src = XLSX.read(new Uint8Array(buf), { type: 'array', cellDates: true });
+      const wb = new ExcelJS.Workbook(); await wb.xlsx.load(XLSX.write(src, { bookType: 'xlsx', type: 'array' }));
+      wb.converted = true; return wb;
+    } catch (e) { throw first || e; }
+  }
 
   $('run').onclick = async () => {
     hideErr(); $('run').disabled = true; $('status').textContent = 'بيراجع...';
     try {
       if (typeof ExcelJS === 'undefined') throw new Error('مكتبة Excel ما اتحملتش. اتأكد من الإنترنت وافتح الصفحة تاني.');
-      const fw = await loadWb(bufs.form), dw = await loadWb(bufs.data);
+      const fw = await loadWb(bufs.form, names.form), dw = await loadWb(bufs.data, names.data);
       const now = new Date(); const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
       const out = runCheck(ExcelJS, fw, dw, DEFAULT_COURSES, today);
       out.dataWb = dw; last = out; filter = 'all'; render(); $('intro').hidden = true; $('results').hidden = false;
-      $('status').textContent = `اتراجع ${out.stats.students} طالب من الملف (${out.submissions} تسجيل في الفورم).`;
+      $('status').textContent = `اتراجع ${out.stats.students} طالب من الملف (${out.submissions} تسجيل في الفورم).`
+        + (dw.converted ? ' ملف البيانات اتحوّل لصيغة ‎.xlsx‎ عشان يتقرا، فالألوان وعرض الأعمدة في الملف المصحح ممكن يختلفوا عن الأصل.' : '');
       $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     } catch (e) {
       console.error(e);
