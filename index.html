@@ -210,6 +210,7 @@ tr:last-child td{border-bottom:none}
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script>
 /* ===== Registration check core (shared by the page and the Node test) ===== */
 const DEFAULT_COURSES = `CHM001 | كيمياء هندسية
@@ -627,19 +628,34 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
   const showErr = m => { $('err').textContent = m; $('err').hidden = false; };
   const hideErr = () => { $('err').hidden = true; };
 
+  // Files saved by some editors (e.g. WPS Office) carry a "document properties" part that ExcelJS can't read
+  // ("Unexpected xml node in parseOpen"). The properties aren't needed, so blank that part and load again.
+  const EMPTY_CORE = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:dcmitype="http://purl.org/dc/dcmitype/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"></cp:coreProperties>';
+  async function loadWb(buf) {
+    try { const wb = new ExcelJS.Workbook(); await wb.xlsx.load(buf.slice(0)); return wb; }
+    catch (e) {
+      if (typeof JSZip === 'undefined' || !/Unexpected xml node/.test((e && e.message) || '')) throw e;
+      const zip = await JSZip.loadAsync(buf.slice(0));
+      if (!zip.file('docProps/core.xml')) throw e;
+      zip.file('docProps/core.xml', EMPTY_CORE);
+      const wb = new ExcelJS.Workbook(); await wb.xlsx.load(await zip.generateAsync({ type: 'arraybuffer' })); return wb;
+    }
+  }
+
   $('run').onclick = async () => {
     hideErr(); $('run').disabled = true; $('status').textContent = 'بيراجع...';
     try {
       if (typeof ExcelJS === 'undefined') throw new Error('مكتبة Excel ما اتحملتش. اتأكد من الإنترنت وافتح الصفحة تاني.');
-      const fw = new ExcelJS.Workbook(); await fw.xlsx.load(bufs.form.slice(0));
-      const dw = new ExcelJS.Workbook(); await dw.xlsx.load(bufs.data.slice(0));
+      const fw = await loadWb(bufs.form), dw = await loadWb(bufs.data);
       const now = new Date(); const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
       const out = runCheck(ExcelJS, fw, dw, DEFAULT_COURSES, today);
       out.dataWb = dw; last = out; filter = 'all'; render(); $('intro').hidden = true; $('results').hidden = false;
       $('status').textContent = `اتراجع ${out.stats.students} طالب من الملف (${out.submissions} تسجيل في الفورم).`;
       $('results').scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
     } catch (e) {
-      console.error(e); showErr(e && e.message ? e.message : 'حصلت مشكلة في قراءة الملفات.'); $('status').textContent = '';
+      console.error(e);
+      const m = e && e.message ? e.message : '';
+      showErr(/Unexpected xml node|parseOpen|central directory|zip/i.test(m) ? 'الملف مش بيتقرا بالشكل ده. افتحه في Excel واعمل «حفظ باسم» بصيغة ‎.xlsx‎ وجرّب تاني. (' + m.slice(0, 120) + ')' : m || 'حصلت مشكلة في قراءة الملفات.'); $('status').textContent = '';
     } finally { $('run').disabled =!(bufs.form && bufs.data); }
   };
 
