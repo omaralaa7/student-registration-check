@@ -13,7 +13,7 @@
 :root{
   --bg:#F5F7FA; --surface:#FFFFFF; --sunk:#EDF1F6; --line:#D9E0EA; --fg:#18222F; --muted:#5B6878;
   --accent:#1F3A5F; --accent-fg:#FFFFFF; --accent-soft:#E3EAF3;
-  --ok:#1E7A46; --ok-bg:#E3F3E9; --fix:#1E7A46; --fix-bg:#C6EFCE; --chk:#9A4A0B; --chk-bg:#FCE4D6; --new:#1D5A99; --new-bg:#DDEBF7; --err:#A4262C; --err-bg:#FBE9EA;
+  --ok:#1E7A46; --ok-bg:#E3F3E9; --fix:#1E7A46; --fix-bg:#C6EFCE; --chk:#9A4A0B; --chk-bg:#FCE4D6; --new:#1D5A99; --new-bg:#DDEBF7; --skip:#7A5D00; --skip-bg:#FFF2CC; --err:#A4262C; --err-bg:#FBE9EA;
   --f-display:"Readex Pro","IBM Plex Sans Arabic",Tahoma,sans-serif;
   --f-body:"IBM Plex Sans Arabic",Tahoma,"Segoe UI",sans-serif;
   --f-mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
@@ -22,12 +22,12 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#151A21; --surface:#1C222B; --sunk:#171C24; --line:#2E3743; --fg:#D9DFE7; --muted:#97A3B2;
   --accent:#3F6FB3; --accent-fg:#FFFFFF; --accent-soft:#1F2C3F;
-  --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --err:#F1A1A5; --err-bg:#3D1D20;
+  --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --skip:#E3CB6E; --skip-bg:#39321A; --err:#F1A1A5; --err-bg:#3D1D20;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#151A21; --surface:#1C222B; --sunk:#171C24; --line:#2E3743; --fg:#D9DFE7; --muted:#97A3B2;
   --accent:#3F6FB3; --accent-fg:#FFFFFF; --accent-soft:#1F2C3F;
-  --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --err:#F1A1A5; --err-bg:#3D1D20;
+  --ok:#7FD3A2; --ok-bg:#163325; --fix:#7FD3A2; --fix-bg:#1B3B29; --chk:#F2B27E; --chk-bg:#3E2A1A; --new:#9CC6F2; --new-bg:#1A2E46; --skip:#E3CB6E; --skip-bg:#39321A; --err:#F1A1A5; --err-bg:#3D1D20;
   color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -65,18 +65,18 @@ button.primary{background:var(--accent);color:var(--accent-fg);border-color:var(
 .checks span{color:var(--muted);font-size:.9rem}
 .legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.88rem;color:var(--muted)}
 .sw{display:inline-block;width:18px;height:18px;border-radius:4px;vertical-align:-4px;margin-inline-end:8px;border:1.5px solid var(--line)}
-.sw.fix{background:var(--fix-bg);border-color:var(--fix)} .sw.new{background:var(--new-bg);border-color:var(--new)} .sw.chk{background:var(--chk-bg);border-color:var(--chk)}
+.sw.skip{background:var(--skip-bg);border-color:var(--skip)} .sw.fix{background:var(--fix-bg);border-color:var(--fix)} .sw.new{background:var(--new-bg);border-color:var(--new)} .sw.chk{background:var(--chk-bg);border-color:var(--chk)}
 .ico{width:26px;height:26px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;color:var(--new)}
 .brand{display:flex;align-items:center;gap:14px}
 .mark{width:52px;height:52px;border-radius:14px;background:var(--accent);color:var(--accent-fg);display:grid;place-items:center;flex:none}
 .mark .ico{width:28px;height:28px;color:inherit;stroke-width:2}
 .drop.ready .ico{color:var(--ok)}
-.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
-@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)}}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr)} .stats .stat:first-child{grid-column:1/-1}}
 .stat{border-radius:8px;padding:10px 14px;background:var(--sunk);border:1px solid var(--line);border-inline-start-width:3px;display:grid;gap:2px;min-width:0}
 .stat .n{font-family:var(--f-display);font-size:1.5rem;font-variant-numeric:tabular-nums;line-height:1.2}
 .stat .l{font-size:.82rem;color:var(--muted)}
-.stat.fixed{border-inline-start-color:var(--fix)} .stat.check{border-inline-start-color:var(--chk)} .stat.new{border-inline-start-color:var(--new)}
+.stat.skip{border-inline-start-color:var(--skip)} .stat.skip .n{color:var(--skip)} .stat.fixed{border-inline-start-color:var(--fix)} .stat.check{border-inline-start-color:var(--chk)} .stat.new{border-inline-start-color:var(--new)}
 .stat.fixed .n{color:var(--fix)} .stat.check .n{color:var(--chk)} .stat.new .n{color:var(--new)}
 .filters{display:flex;flex-wrap:wrap;gap:8px}
 .filters button{padding:6px 14px;font-size:.9rem;border-radius:999px}
@@ -87,7 +87,7 @@ table{border-collapse:collapse;width:100%;font-size:.9rem}
 th,td{text-align:right;vertical-align:top;padding:12px;border-bottom:1px solid var(--line)}
 /* a coloured edge per row/card, so the rows that need attention stand out when scanning */
 tbody tr{border-inline-start:3px solid transparent}
-tr.s-fixed{border-inline-start-color:var(--fix)} tr.s-check{border-inline-start-color:var(--chk)} tr.s-new{border-inline-start-color:var(--new)}
+tr.s-skip{border-inline-start-color:var(--skip)} tr.s-fixed{border-inline-start-color:var(--fix)} tr.s-check{border-inline-start-color:var(--chk)} tr.s-new{border-inline-start-color:var(--new)}
 @media (min-width:641px){
   table{table-layout:fixed}
   th:nth-child(1){width:104px} th:nth-child(2){width:20%} th:nth-child(3){width:33%} th:nth-child(4){width:17%}
@@ -98,7 +98,7 @@ th{background:var(--sunk);font-weight:600;position:sticky;top:0}
 tr:last-child td{border-bottom:none}
 .pill{display:inline-block;padding:2px 12px;border-radius:999px;font-size:.8rem;font-weight:600;white-space:nowrap}
 .pill.ok{background:var(--sunk);color:var(--muted);box-shadow:inset 0 0 0 1px var(--line)} .pill.fixed{background:var(--fix-bg);color:var(--fix)}
-.pill.check{background:var(--chk-bg);color:var(--chk)} .pill.new{background:var(--new-bg);color:var(--new)}
+.pill.skip{background:var(--skip-bg);color:var(--skip)} .pill.check{background:var(--chk-bg);color:var(--chk)} .pill.new{background:var(--new-bg);color:var(--new)}
 .mono{font-family:var(--f-mono);font-size:.85rem;direction:ltr;unicode-bidi:isolate;overflow-wrap:anywhere}
 .chg{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:baseline}
 .was{text-decoration:line-through;color:var(--muted)}
@@ -175,12 +175,13 @@ tr:last-child td{border-bottom:none}
     <div class="checks">
       <div><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3.5 7.5l8.5 6 8.5-6"/></svg><b>الإيميل</b><span>بيتقارن بالإيميل اللي الطالب دخل بيه الفورم. لو غلط أو فاضي أو فيه مسافة زيادة بيتصلح.</span></div>
       <div><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 4h11a3 3 0 0 1 3 3v13H8a3 3 0 0 1-3-3z"/><path d="M5 17a3 3 0 0 1 3-3h11M9 8h6"/></svg><b>المواد</b><span>أسماء المواد في الفورم بتتحول لأكواد من لائحة المقررات، وبتتقارن بخانات course في الملف.</span></div>
-      <div><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.7-3.5 3.200-5.5 6.5-5.5s5.800 2 6.5 5.5M19.5 7v6M16.5 10h6"/></svg><b>طلاب الملف بس</b><span>بيتراجع الطلاب الموجودين في ملفك فقط. اللي سجّل في الفورم ومش في الملف مش بيتضاف — اسمه بيتكتب في التقرير بس.</span></div>
+      <div><svg class="ico" viewBox="0 0 24 24" aria-hidden="true"><circle cx="10" cy="8" r="3.5"/><path d="M3.5 20c.7-3.5 3.200-5.5 6.5-5.5s5.800 2 6.5 5.5M19.5 7v6M16.5 10h6"/></svg><b>طلاب الملف بس</b><span>بيتراجع الطلاب الموجودين في ملفك فقط. اللي في الملف ومش مسجل في الفورم بيتعلّم بالأصفر إنه ما اتراجعش، واللي في الفورم ومش في الملف مش بيتضاف.</span></div>
     </div>
     <p class="small">الاسم والرقم القومي بيتستخدموا بس عشان نلاقي الطالب، ومش بيتعدلوا.</p>
     <div class="legend">
       <span><i class="sw fix"></i>أخضر = اتصلح</span>
       <span><i class="sw chk"></i>برتقالي = للتأكيد، من غير تعديل</span>
+      <span><i class="sw skip"></i>أصفر = مش في الفورم، ما اتراجعش</span>
     </div>
   </section>
 
@@ -199,6 +200,7 @@ tr:last-child td{border-bottom:none}
       <button data-f="all" aria-pressed="true">الكل</button>
       <button data-f="fixed" aria-pressed="false">اتصلح</button>
       <button data-f="check" aria-pressed="false">للتأكيد</button>
+      <button data-f="skip" aria-pressed="false">ما اتراجعش</button>
       <button data-f="ok" aria-pressed="false">سليم</button>
     </div>
     <div class="tbl"><table>
@@ -418,7 +420,7 @@ function readData(wb) {
   return { ws, hr, col, courseCols, rows, last, humSpace };
 }
 
-const COLORS = { fix: 'FFC6EFCE', add: 'FFDDEBF7', check: 'FFFCE4D6' };
+const COLORS = { fix: 'FFC6EFCE', add: 'FFDDEBF7', check: 'FFFCE4D6', skip: 'FFFFF2CC' };
 function paint(cell, argb, note) {
   cell.style = JSON.parse(JSON.stringify(cell.style || {})); // styles are shared between cells in ExcelJS
   cell.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb } };
@@ -439,6 +441,7 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
     const k = emailKey(d.emailRaw); if (k) (byEmail.get(k) || byEmail.set(k, []).get(k)).push(d);
   }
   const used = new Set(), log = [], results = [], notInFile = [];
+  const rowCols = [col.nid, col.name, col.email, col.amount, ...data.courseCols].filter(Boolean);
   const L = (row, field, who, before, after, why) => log.push({ row, field, who, before, after, why });
 
   for (const s of form.students) {
@@ -457,6 +460,13 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
     if (!m) { notInFile.push(res); continue; } // not in her file: reported only, never added
     if (m.length > 1) res.notes.push(`الطالب متكرر في الملف (صفوف ${m.map(x => x.r).join('، ')}) — تمت مراجعة أول صف`);
     const d = m[0]; m.forEach(x => used.add(x)); res.d = d; res.row = d.r;
+    // an earlier run may have marked this row yellow ("not reviewed"); it is reviewed now, so clear that mark
+    for (const x of m) for (const c of rowCols) {
+      const cell = ws.getRow(x.r).getCell(c);
+      if (cell.fill && cell.fill.fgColor && cell.fill.fgColor.argb === COLORS.skip) {
+        cell.style = JSON.parse(JSON.stringify(cell.style || {})); cell.fill = { type: 'pattern', pattern: 'none' };
+      }
+    }
     const who = d.name || s.name;
 
     // ---- email ----
@@ -532,6 +542,13 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
     results.push(res);
   }
 
+  // ---- students in the file who are not in this form: nothing to compare with, so mark them yellow ----
+  const extra = data.rows.filter(d => !used.has(d));
+  for (const d of extra) {
+    rowCols.forEach(c => paint(ws.getRow(d.r).getCell(c), COLORS.skip));
+    L(d.r, 'الصف كله', d.name, '', '(ما اتراجعش)', 'الطالب مش موجود في ملف الفورم ده، فبياناته ما اتراجعتش');
+  }
+
   // ---- change log sheet in the corrected file ----
   const old = dataWb.getWorksheet('سجل التعديلات'); if (old) dataWb.removeWorksheet(old.id);
   const lg = dataWb.addWorksheet('سجل التعديلات', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }] });
@@ -539,11 +556,10 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
     { header: 'القيمة القديمة', width: 34 }, { header: 'القيمة الجديدة', width: 50 }, { header: 'السبب', width: 55 }];
   log.forEach(e => lg.addRow([e.row, e.field, e.who, e.before, e.after, e.why]));
   lg.addRow([]); lg.addRow(['دليل الألوان']).font = { bold: true };
-  [['أخضر = خانة اتصلحت', COLORS.fix], ['برتقالي = من غير تعديل، للتأكيد', COLORS.check]]
+  [['أخضر = خانة اتصلحت', COLORS.fix], ['برتقالي = من غير تعديل، للتأكيد', COLORS.check], ['أصفر = الطالب مش في الفورم، ما اتراجعش', COLORS.skip]]
     .forEach(([t, c]) => { const rw = lg.addRow([t]); rw.getCell(1).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: c } }; });
   styleHeader(lg);
 
-  const extra = data.rows.filter(d => !used.has(d));
   const reportWb = buildReport(ExcelJS, results, extra, fmtCode, notInFile);
   const count = k => results.filter(x => x.status === k).length;
   return {
@@ -551,7 +567,7 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
     stats: {
       students: results.length, ok: count('ok'), fixed: count('fixed'), check: count('check'), notInFile: notInFile.length,
       emailFixes: results.filter(x => x.email.status === 'fixed').length,
-      courseFixes: results.filter(x => x.courses.status === 'fixed').length, extra: extra.length,
+      courseFixes: results.filter(x => x.courses.status === 'fixed').length, extra: extra.length, skip: extra.length,
     },
   };
 }
@@ -563,7 +579,7 @@ function styleHeader(ws) {
 }
 
 const chText = x => x.from && x.to ? `${x.to} بدل ${x.from}` : x.to ? `اتضافت ${x.to}` : `اتشالت ${x.from}`;
-const STATUS_AR = { ok: 'سليم', fixed: 'اتصلح', check: 'للتأكيد', new: 'طالب جديد' };
+const STATUS_AR = { ok: 'سليم', fixed: 'اتصلح', check: 'للتأكيد', new: 'طالب جديد', skip: 'ما اتراجعش' };
 function buildReport(ExcelJS, results, extra, fmtCode, notInFile = []) {
   const wb = new ExcelJS.Workbook();
   const ws = wb.addWorksheet('المراجعة', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }] });
@@ -682,18 +698,21 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
     const s = last.stats;
     const stat = (n, l, cls) => `<div class="stat ${cls}"><span class="n">${n}</span><span class="l">${l}</span></div>`;
     $('stats').innerHTML = stat(s.students, 'طالب اتراجع', '') + stat(s.fixed, `اتصلح (${s.emailFixes} إيميل، ${s.courseFixes} مواد)`, 'fixed')
-      + stat(s.check, 'للتأكيد', 'check') + stat(s.ok, 'سليم', 'ok');
-    $('extra-line').innerHTML = [s.notInFile ? `فيه ${s.notInFile} طالب سجّلوا في الفورم ومش موجودين في الملف — ما اتضافوش، وأسماؤهم في التقرير.` : '',
-      s.extra ? `فيه ${s.extra} طالب في الملف مش موجودين في الفورم ده — ما اتغيروش، وهتلاقيهم في التقرير.` : ''].filter(Boolean).join('<br>');
-    const order = { check: 0, fixed: 1, new: 2, ok: 3 };
-    const rows = [...last.results].sort((a, b) => order[a.status] - order[b.status] || (a.row || 0) - (b.row || 0))
+      + stat(s.check, 'للتأكيد', 'check') + stat(s.skip, 'ما اتراجعوش (مش في الفورم)', 'skip') + stat(s.ok, 'سليم', 'ok');
+    $('extra-line').innerHTML = [s.skip ? `فيه ${s.skip} طالب في الملف مش مسجلين في الفورم ده — بياناتهم ما اتراجعتش، ومتعلّمين بالأصفر هنا وفي الملف المصحح.` : '',
+      s.notInFile ? `فيه ${s.notInFile} طالب سجّلوا في الفورم ومش موجودين في الملف — ما اتضافوش، وأسماؤهم في التقرير.` : ''].filter(Boolean).join('<br>');
+    const order = { check: 0, fixed: 1, skip: 2, ok: 3 };
+    const skipped = last.extra.map(d => ({ status: 'skip', row: d.r, s: { name: d.name, level: '' }, email: { before: cleanEmail(d.emailRaw) },
+      courses: { before: d.courses.filter(c => c.raw).map(c => c.raw) }, notes: ['مش مسجل في ملف الفورم ده — بياناته ما اتراجعتش.'] }));
+    const rows = [...last.results, ...skipped].sort((a, b) => order[a.status] - order[b.status] || (a.row || 0) - (b.row || 0))
       .filter(x => filter === 'all' || x.status === filter);
     const fc = c => c.replace(/^HUME(\d)/, 'HUM E$1');
     const mail = v => esc(v).replace('@', '@<wbr>'); // long emails break after the @ first
     $('rows').innerHTML = rows.map(x => {
       const e = x.email, c = x.courses;
       let em, co;
-      if (x.status === 'new') { em = `<span class="mono">${mail(cleanEmail(x.s.login))}</span>`; co = `<span class="mono">${esc(x.formCodes.map(fc).join(', '))}</span>` + (x.unknown.length ? `<div class="chk-txt">مش في اللائحة: ${esc(x.unknown.join('، '))}</div>` : ''); }
+      if (x.status === 'skip') { em = `<span class="mono" style="color:var(--muted)">${mail(x.email.before)}</span>`; co = `<span class="mono" style="color:var(--muted)">${esc(x.courses.before.join(', '))}</span>`; }
+      else if (x.status === 'new') { em = `<span class="mono">${mail(cleanEmail(x.s.login))}</span>`; co = `<span class="mono">${esc(x.formCodes.map(fc).join(', '))}</span>` + (x.unknown.length ? `<div class="chk-txt">مش في اللائحة: ${esc(x.unknown.join('، '))}</div>` : ''); }
       else {
         em = e.status === 'fixed' ? `<div class="mono was">${mail(e.before || '(فاضي)')}</div><div class="mono">${mail(e.after)}</div><div class="sub">${esc(e.why)}</div>`
           : e.status === 'check' ? `<div class="mono">${mail(e.before)}</div><div class="chk-txt">الفورم اتبعت من حساب تاني:</div><div class="mono">${mail(cleanEmail(x.s.login))}</div><div class="sub">الموجود في الملف هو اللي الطالب كتبه — من غير تعديل.</div>`
@@ -706,7 +725,7 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
         <td data-label="الإيميل">${em}</td><td data-label="المواد">${co}</td><td class="note" data-label="ملاحظات">${x.notes.map(esc).join('<br>')}</td></tr>`;
     }).join('') || `<tr><td colspan="5" class="sub">مفيش طلاب في الفلتر ده.</td></tr>`;
     document.querySelectorAll('.filters button').forEach(b => {
-      const f = b.dataset.f, n = f === 'all' ? s.students : s[f];
+      const f = b.dataset.f, n = f === 'all' ? s.students + s.skip : s[f];
       b.setAttribute('aria-pressed', f === filter);
       b.innerHTML = `${esc(b.dataset.l || (b.dataset.l = b.textContent))} <span class="cnt">${n}</span>`;
     });
