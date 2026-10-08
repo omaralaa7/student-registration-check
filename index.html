@@ -433,7 +433,12 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
   const form = readForm(formWb);
   const data = readData(dataWb);
   const { ws, col } = data;
-  const fmtCode = c => (data.humSpace && /^HUME\d/.test(c)) ? 'HUM E' + c.slice(4) : c;
+  const fmtCode = c => c; // codes are always written without a space (HUME06, never "HUM E06")
+  // the doctor wants no space inside course codes: rewrite "HUM E06" as "HUME06" on every row of the sheet
+  let spacesRemoved = 0;
+  for (const d of data.rows) for (const c of d.courses) {
+    if (c.raw && isCode(c.raw) && /\s/.test(c.raw)) { c.raw = codeKey(c.raw); ws.getRow(d.r).getCell(c.col).value = c.raw; spacesRemoved++; }
+  }
 
   const byNid = new Map(), byEmail = new Map();
   for (const d of data.rows) {
@@ -549,6 +554,8 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
     L(d.r, 'الصف كله', d.name, '', '(ما اتراجعش)', 'الطالب مش موجود في ملف الفورم ده، فبياناته ما اتراجعتش');
   }
 
+  if (spacesRemoved) L('-', 'المواد', 'كل الصفوف', 'HUM E06', 'HUME06', `اتشالت المسافة من جوه ${spacesRemoved} كود مادة`);
+
   // ---- change log sheet in the corrected file ----
   const old = dataWb.getWorksheet('سجل التعديلات'); if (old) dataWb.removeWorksheet(old.id);
   const lg = dataWb.addWorksheet('سجل التعديلات', { views: [{ rightToLeft: true, state: 'frozen', ySplit: 1 }] });
@@ -567,7 +574,7 @@ function runCheck(ExcelJS, formWb, dataWb, courseText, today) {
     stats: {
       students: results.length, ok: count('ok'), fixed: count('fixed'), check: count('check'), notInFile: notInFile.length,
       emailFixes: results.filter(x => x.email.status === 'fixed').length,
-      courseFixes: results.filter(x => x.courses.status === 'fixed').length, extra: extra.length, skip: extra.length,
+      courseFixes: results.filter(x => x.courses.status === 'fixed').length, extra: extra.length, skip: extra.length, spacesRemoved,
     },
   };
 }
@@ -700,13 +707,14 @@ if (typeof module !== 'undefined') module.exports = { runCheck, DEFAULT_COURSES,
     $('stats').innerHTML = stat(s.students, 'طالب اتراجع', '') + stat(s.fixed, `اتصلح (${s.emailFixes} إيميل، ${s.courseFixes} مواد)`, 'fixed')
       + stat(s.check, 'للتأكيد', 'check') + stat(s.skip, 'ما اتراجعوش (مش في الفورم)', 'skip') + stat(s.ok, 'سليم', 'ok');
     $('extra-line').innerHTML = [s.skip ? `فيه ${s.skip} طالب في الملف مش مسجلين في الفورم ده — بياناتهم ما اتراجعتش، ومتعلّمين بالأصفر هنا وفي الملف المصحح.` : '',
-      s.notInFile ? `فيه ${s.notInFile} طالب سجّلوا في الفورم ومش موجودين في الملف — ما اتضافوش، وأسماؤهم في التقرير.` : ''].filter(Boolean).join('<br>');
+      s.notInFile ? `فيه ${s.notInFile} طالب سجّلوا في الفورم ومش موجودين في الملف — ما اتضافوش، وأسماؤهم في التقرير.` : '',
+      s.spacesRemoved ? `اتشالت المسافة من جوه ${s.spacesRemoved} كود مادة في الملف المصحح (زي HUM E06 ← HUME06).` : ''].filter(Boolean).join('<br>');
     const order = { check: 0, fixed: 1, skip: 2, ok: 3 };
     const skipped = last.extra.map(d => ({ status: 'skip', row: d.r, s: { name: d.name, level: '' }, email: { before: cleanEmail(d.emailRaw) },
       courses: { before: d.courses.filter(c => c.raw).map(c => c.raw) }, notes: ['مش مسجل في ملف الفورم ده — بياناته ما اتراجعتش.'] }));
     const rows = [...last.results, ...skipped].sort((a, b) => order[a.status] - order[b.status] || (a.row || 0) - (b.row || 0))
       .filter(x => filter === 'all' || x.status === filter);
-    const fc = c => c.replace(/^HUME(\d)/, 'HUM E$1');
+    const fc = c => c;
     const mail = v => esc(v).replace('@', '@<wbr>'); // long emails break after the @ first
     $('rows').innerHTML = rows.map(x => {
       const e = x.email, c = x.courses;
